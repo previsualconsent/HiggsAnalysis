@@ -114,8 +114,8 @@ HiggsAnalyzer::HiggsAnalyzer(const edm::ParameterSet& iConfig)
     m_gen_diphoton_mass  =  fs->make<TH1F>("gen_diphoton_mass",  ";M_{#gamma#gamma};Events",  20,  123,  127);
         
     m_diphoton_mass[0.05f] = fs->make<TH1F>("diphoton_mass05",  ";M_{#gamma#gamma};Events",  20,  100,  150);
-    m_diphoton_mass[0.1f] = fs->make<TH1F>("diphoton_mass1",  ";M_{#gamma#gamma};Events",  20,  100,  150);
-    m_diphoton_mass[0.2f] = fs->make<TH1F>("diphoton_mass2",  ";M_{#gamma#gamma};Events",  20,  100,  150);
+    m_diphoton_mass[0.01f] = fs->make<TH1F>("diphoton_mass01",  ";M_{#gamma#gamma};Events",  20,  100,  150);
+    m_diphoton_mass[0.02f] = fs->make<TH1F>("diphoton_mass02",  ";M_{#gamma#gamma};Events",  20,  100,  150);
     
     m_gen_photon_pt_cut = 10.0;
 
@@ -256,7 +256,7 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 HiggsAnalyzer::photonType HiggsAnalyzer::get_photonType(float eta)
 {
     if(fabs(eta) < 1.5) return BARREL_PHOTON;
-    else if(fabs(eta) < 3.0) return ENDCAP_PHOTON;
+    else if(fabs(eta) < 3.0 && fabs(eta) > 1.6) return ENDCAP_PHOTON;
     else return NO_PHOTON;
 }
 
