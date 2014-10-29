@@ -21,9 +21,10 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 from UserCode.HGCanalysis.storeTools_cff import fillFromStore
 
-files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/Hgg_13TeV/') if "v5_NoPileup" in f]
+#files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/Hgg_13TeV/') if "v5_NoPileup" in f]
+
 process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring(files),
+        fileNames = cms.untracked.vstring("file:///afs/cern.ch/work/v/vandreev/public/nopileup/Hgg/step3_v4_Hgg_noPU.root"),
         )
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
@@ -35,7 +36,13 @@ process.analysis = cms.EDAnalyzer('HiggsAnalyzer',
         jetSource = cms.untracked.string("ak5PFJets")
 )
 
+process.filter = cms.EDFilter("MCBarrelEndcapFilter",
+       minInvMass = cms.untracked.double(127.0),
+       maxInvMass = cms.untracked.double(133.0)
+        )
+
 process.TFileService = cms.Service("TFileService", fileName = cms.string('Higgs-analysis.root'))
 
 
+#process.p = cms.Path(process.filter * process.analysis)
 process.p = cms.Path(process.analysis)

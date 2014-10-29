@@ -72,7 +72,13 @@ class HiggsAnalyzer : public edm::EDAnalyzer {
       TH1F * m_gen_photon_pt;
       TH1F * m_gen_photon_eta;
       TH1F * m_gen_photon_type;
-      TH1F * m_gen_diphoton_mass;
+      TH1F * m_gen_photon_dr;
+
+      TH1F * m_gen_filt_photon_pt;
+      TH1F * m_gen_filt_photon_eta;
+      TH1F * m_gen_filt_photon_dr;
+      TH1F * m_gen_filt_diphoton_mass;
+
       std::map<float,TH1F*> m_diphoton_mass;
 
       float m_gen_photon_pt_cut;
@@ -108,21 +114,26 @@ HiggsAnalyzer::HiggsAnalyzer(const edm::ParameterSet& iConfig)
     m_jetSource        = iConfig.getUntrackedParameter<std::string>("jetSource");
 
     edm::Service<TFileService> fs;
-    m_gen_photon_pt      =  fs->make<TH1F>("gen_photon_pt",      ";p_{T};Photons",            20,  0,    125);
-    m_gen_photon_eta     =  fs->make<TH1F>("gen_photon_eta",     ";#eta;Photons",             20,  -4,   4);
-    m_gen_photon_type     =  fs->make<TH1F>("gen_photon_type",    ";type;Photons",             3,   0,    3);
-    m_gen_diphoton_mass  =  fs->make<TH1F>("gen_diphoton_mass",  ";M_{#gamma#gamma};Events",  20,  123,  127);
-        
-    m_diphoton_mass[0.05f] = fs->make<TH1F>("diphoton_mass05",  ";M_{#gamma#gamma};Events",  20,  100,  150);
-    m_diphoton_mass[0.01f] = fs->make<TH1F>("diphoton_mass01",  ";M_{#gamma#gamma};Events",  20,  100,  150);
-    m_diphoton_mass[0.02f] = fs->make<TH1F>("diphoton_mass02",  ";M_{#gamma#gamma};Events",  20,  100,  150);
+    m_gen_photon_pt           =  fs->make<TH1F>("gen_photon_pt",           ";p_{T};Photons",            20,          0,    125);
+    m_gen_photon_eta          =  fs->make<TH1F>("gen_photon_eta",          ";#eta;Photons",             20,          -4,   4);
+    m_gen_photon_type         =  fs->make<TH1F>("gen_photon_type",         ";Event type;Events",       4,           0,    4);
+    m_gen_photon_dr           =  fs->make<TH1F>("gen_photon_dr",           ";#Delta R;Photons",         20,          0,    10);
+
+    m_gen_filt_photon_pt      =  fs->make<TH1F>("gen_filt_photon_pt",      ";p_{T};Photons",            20,          0,    125);
+    m_gen_filt_photon_eta     =  fs->make<TH1F>("gen_filt_photon_eta",     ";#eta;Photons",             20,          -4,   4);
+    m_gen_filt_photon_dr      =  fs->make<TH1F>("gen_filt_photon_dr",      ";#Delta R;Photons",         20,          0,    10);
+    m_gen_filt_diphoton_mass  =  fs->make<TH1F>("gen_filt_diphoton_mass",  ";M_{#gamma#gamma};Events",  20,          123,  133);
+
+    m_diphoton_mass[0.05f]    =  fs->make<TH1F>("diphoton_mass05",         ";M_{#gamma#gamma};Events",  20,          100,  150);
+    m_diphoton_mass[0.01f]    =  fs->make<TH1F>("diphoton_mass01",         ";M_{#gamma#gamma};Events",  20,          100,  150);
+    m_diphoton_mass[0.02f]    =  fs->make<TH1F>("diphoton_mass02",         ";M_{#gamma#gamma};Events",  20,          100,  150);
     
     m_gen_photon_pt_cut = 10.0;
 
     m_gen_photon_type->GetXaxis()->SetBinLabel(1,"None");
-    m_gen_photon_type->GetXaxis()->SetBinLabel(2,"Barrel");
-    m_gen_photon_type->GetXaxis()->SetBinLabel(3,"Endcap");
-
+    m_gen_photon_type->GetXaxis()->SetBinLabel(2,"B+B");
+    m_gen_photon_type->GetXaxis()->SetBinLabel(3,"E+E");
+    m_gen_photon_type->GetXaxis()->SetBinLabel(4,"E+B");
 }
 
 
@@ -152,20 +163,71 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    photonType type0 = NO_PHOTON;
    photonType type1 = NO_PHOTON;
 
+   std::cout << "Starting analyzer\n";
+   std::cout << "Checking " << genParticles->size() << " genParticles\n";
    for( edm::View<reco::GenParticle>::const_iterator genParticle =  genParticles->begin();
            genParticle != genParticles->end();
            ++genParticle)
    {
-       if(genParticle->pdgId() == 25 && genParticle->numberOfDaughters() == 2) //Grab the Higgs that decays to 2 particles
+       //if(genParticle->pdgId() == 25)
+       //{
+       //    std::cout << "Found a Higgs with " << genParticle->numberOfDaughters() << " daughters\n";
+
+       //    for(size_t i=0; i < genParticle->numberOfDaughters(); ++i)
+       //    {
+       //        const reco::GenParticle * daughter = dynamic_cast<const reco::GenParticle *>(genParticle->daughter(i));
+       //        std::cout << "Daughter " << i << " has ID " << daughter->pdgId() << std::endl;
+       //        std::cout << "Daughter " << i << " has status " << daughter->status() << std::endl;
+       //        std::cout << "Daughter has " << daughter->numberOfDaughters() << " daughters\n";
+
+       //        for(size_t j=0; j < daughter->numberOfDaughters(); ++j)
+       //        {
+       //            const reco::GenParticle * sub_daughter = dynamic_cast<const reco::GenParticle *>(daughter->daughter(j));
+       //            std::cout << "sub Daughter " << j << " has ID " << sub_daughter->pdgId() << std::endl;
+       //            std::cout << "sub Daughter " << j << " has status " << sub_daughter->status() << std::endl;
+       //        }
+       //    }
+       //}
+
+       if(genParticle->pdgId() == 25 && genParticle->numberOfDaughters() == 3) //Grab the Higgs that decays to 2 particles
        {
+           std::cout << "Found Higgs with 2(3?) daughters\n";
            const reco::GenParticle * photon0 = dynamic_cast<const reco::GenParticle *>(genParticle->daughter(0));
            const reco::GenParticle * photon1 = dynamic_cast<const reco::GenParticle *>(genParticle->daughter(1));
 
            if( photon0->pdgId() != 22 || photon0->pdgId() != 22) // Not Higgs to gg
+           {
+               std::cout << "daughters are not photons\n";
                continue;
+           }
 
            type0 = get_photonType(photon0->eta());
            type1 = get_photonType(photon1->eta());
+
+           m_gen_photon_pt->Fill(photon0->pt());
+           m_gen_photon_pt->Fill(photon1->pt());
+
+           m_gen_photon_eta->Fill(photon0->eta());
+           m_gen_photon_eta->Fill(photon1->eta());
+
+           if(type0 == BARREL_PHOTON)
+               if(type1 == BARREL_PHOTON)
+                   m_gen_photon_type->Fill(1);
+               else if(type1 == ENDCAP_PHOTON)
+                   m_gen_photon_type->Fill(3);
+               else
+                   m_gen_photon_type->Fill(0);
+           else if(type0 == ENDCAP_PHOTON)
+               if(type1 == BARREL_PHOTON)
+                   m_gen_photon_type->Fill(3);
+               else if(type1 == ENDCAP_PHOTON)
+                   m_gen_photon_type->Fill(2);
+               else
+                   m_gen_photon_type->Fill(0);
+           else
+               m_gen_photon_type->Fill(0);
+
+           m_gen_photon_dr->Fill(deltaR(*photon0,*photon1));
 
            if(type0 == ENDCAP_PHOTON && type1 == BARREL_PHOTON)
            {
@@ -177,23 +239,25 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
                barrel_photon = photon0;
                endcap_photon = photon1;
            }
+           std::cout << "Found photons\n";
            break; //Found photons, leave the loop
        }
    }
 
    if(!barrel_photon || !endcap_photon)
+   {
+       std::cout << "Did not find Barrel or Endcap photon\n";
        return;
-   m_gen_photon_pt->Fill(barrel_photon->pt());
-   m_gen_photon_pt->Fill(endcap_photon->pt());
+   }
+   m_gen_filt_photon_pt->Fill(barrel_photon->pt());
+   m_gen_filt_photon_pt->Fill(endcap_photon->pt());
 
-   m_gen_photon_eta->Fill(barrel_photon->eta());
-   m_gen_photon_eta->Fill(endcap_photon->eta());
+   m_gen_filt_photon_eta->Fill(barrel_photon->eta());
+   m_gen_filt_photon_eta->Fill(endcap_photon->eta());
 
+   m_gen_filt_photon_dr->Fill(deltaR(*barrel_photon,*endcap_photon));
 
-   m_gen_photon_type->Fill(type0);
-   m_gen_photon_type->Fill(type1);
-
-   m_gen_diphoton_mass->Fill( (barrel_photon->p4() + endcap_photon->p4()).mass() );
+   m_gen_filt_diphoton_mass->Fill( (barrel_photon->p4() + endcap_photon->p4()).mass() );
 
    edm::Handle<edm::View<reco::PFCluster> > hgcee_clusters;
    iEvent.getByLabel(edm::InputTag("particleFlowClusterHGCEE"), hgcee_clusters);

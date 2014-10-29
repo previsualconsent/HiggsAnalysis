@@ -21,7 +21,8 @@ MCBarrelEndcapFilter::MCBarrelEndcapFilter(const edm::ParameterSet& iConfig) :
        statusBarrel(iConfig.getUntrackedParameter("statusBarrel", 1)),
        statusEndcap(iConfig.getUntrackedParameter("statusEndcap", 1)),
        minInvMass(iConfig.getUntrackedParameter("minInvMass", 122.0)),
-       maxInvMass(iConfig.getUntrackedParameter("maxInvMass", 128.0))
+       maxInvMass(iConfig.getUntrackedParameter("maxInvMass", 128.0)),
+       verbose(iConfig.getUntrackedParameter("verbose", false))
 {
     //here do whatever other initialization is needed
 }
@@ -50,15 +51,22 @@ bool MCBarrelEndcapFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
 
     const HepMC::GenEvent * myGenEvent = evt->GetEvent();
 
+    if(verbose) cout << "Start Event\n";
 
     for ( HepMC::GenEvent::particle_const_iterator p = myGenEvent->particles_begin();
             p != myGenEvent->particles_end(); ++p ) {
 
+
+        if(verbose) cout << abs((*p)->pdg_id()) << ' ' 
+            << (*p)->momentum().perp() << ' ' 
+            << (*p)->momentum().eta() << ' ' 
+            << (*p)->status() << endl;
         // check for barrel conditions
         if ((abs((*p)->pdg_id()) == abs(barrelID) || barrelID == 0) &&
                 (*p)->momentum().perp() > ptMinBarrel && (*p)->momentum().eta() > etaMinBarrel 
                 && (*p)->momentum().eta() < etaMaxBarrel && ((*p)->status() == statusBarrel || statusBarrel == 0))
         { 
+            if(verbose) cout << "Found Barrel\n";
             // passed barrel conditions ...
             // ... now check pair-conditions with endcap passed particles
             //
@@ -66,6 +74,7 @@ bool MCBarrelEndcapFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
             double invmass =0.;
             while(!accepted && i<endcap_passed.size()) {
                 invmass = ( math::PtEtaPhiMLorentzVector((*p)->momentum()) + math::PtEtaPhiMLorentzVector(endcap_passed[i]->momentum())).mass();
+                if(verbose) cout << "Invariant Mass is" << invmass << endl;
                 if(invmass > minInvMass && invmass < maxInvMass) {
                     accepted = true;
                 }
@@ -83,13 +92,16 @@ bool MCBarrelEndcapFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
         if ((abs((*p)->pdg_id()) == abs(endcapID) || endcapID == 0) && 
                 (*p)->momentum().perp() > ptMinEndcap && (*p)->momentum().eta() > etaMinEndcap
                 && (*p)->momentum().eta() < etaMaxEndcap && ((*p)->status() == statusEndcap || statusEndcap == 0)) { 
+            if(verbose) cout << "Found Endcap\n";
             // passed endcap conditions ...
             // ... now check pair-conditions with barrel passed particles vector
             unsigned int i=0;
             double invmass =0.;
             while(!accepted && i<barrel_passed.size()) {
                 if((*p) != barrel_passed[i]) {
+                    if(verbose) cout << "Checking to match Barrel\n";
                     invmass = ( math::PtEtaPhiMLorentzVector((*p)->momentum()) + math::PtEtaPhiMLorentzVector(barrel_passed[i]->momentum())).mass();
+                    if(verbose) cout << "Invariant Mass is" << invmass << endl;
                     if(invmass > minInvMass && invmass < maxInvMass) {
                         accepted = true;
                     }
@@ -104,7 +116,14 @@ bool MCBarrelEndcapFilter::filter(edm::Event& iEvent, const edm::EventSetup& iSe
         }
     }
 
-    if (accepted){ return true; } else {return false;}
+    if(verbose)
+    {
+        cout << "This event ";
+        if (accepted){ cout <<  "passed "; } else {cout << "failed ";}
+        cout << "the filter\n";
+    }
+
+    return accepted;
 
 }
 

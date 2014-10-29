@@ -61,6 +61,7 @@ class MCBarrelEndcapFilter : public edm::EDFilter {
        int statusEndcap;
        double minInvMass;
        double maxInvMass;
+       bool verbose;
        
 };
 #endif
