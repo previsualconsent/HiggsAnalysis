@@ -1,4 +1,4 @@
-#include "UserCode/HiggsAnalyzer/interface/MCBarrelEndcapFilter.h"
+#include "UserCode/HiggsAnalysis/interface/MCBarrelEndcapFilter.h"
 
 #include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
 #include "DataFormats/Math/interface/LorentzVector.h"
