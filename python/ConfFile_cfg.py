@@ -21,24 +21,23 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 from UserCode.HGCanalysis.storeTools_cff import fillFromStore
 
-files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/hToGammaGamma_SLHC20/') ]
+files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/hToGammaGammaPU_SLHC21/') ]
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(files),
         )
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
-print process.source.fileNames
-
-
 process.analysis = cms.EDAnalyzer('HiggsAnalyzer',
         genSource = cms.untracked.string("genParticles"),
-        jetSource = cms.untracked.string("ak5PFJets")
+        jetSource = cms.untracked.string("ak5PFJets"),
+        linCorr = cms.untracked.double(1.0)
 )
 
 process.filter = cms.EDFilter("MCBarrelEndcapFilter",
        minInvMass = cms.untracked.double(127.0),
-       maxInvMass = cms.untracked.double(133.0)
+       maxInvMass = cms.untracked.double(133.0),
+       verbose = cms.untracked.bool(True),
         )
 
 process.TFileService = cms.Service("TFileService", fileName = cms.string('Higgs-analysis.root'))

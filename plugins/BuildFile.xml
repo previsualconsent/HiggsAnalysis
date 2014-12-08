@@ -4,6 +4,7 @@
 <use name="DataFormats/HepMCCandidate"/>
 <use name="DataFormats/EgammaCandidates"/>
 <use name="DataFormats/ParticleFlowReco"/>
+<use name="DataFormats/VertexReco"/>
 <use name="DataFormats/Math"/>
 <use name="CommonTools/UtilAlgos"/>
 <use name="FWCore/ServiceRegistry"/>
