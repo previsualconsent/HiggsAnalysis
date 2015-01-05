@@ -102,6 +102,7 @@ class HiggsAnalyzer : public edm::EDAnalyzer {
       {
          const edm::Event * iEvent;
          int eventType;
+         math::XYZPoint vertex;
          const reco::GenParticle * photon[2];
          photonType type[2];
          math::PtEtaPhiMLorentzVector p[2];
@@ -187,7 +188,7 @@ HiggsAnalyzer::HiggsAnalyzer(const edm::ParameterSet& iConfig)
 
     for ( int i = 0; i < 5; ++i)
       for (int j = 0; j < 4; j++)
-         m_diphoton_mass  [i][j]  =  fs->make<TH1F>(("diphoton_mass"   + names[i] + "_" + cuts[j] ).c_str(), ("diphoton_mass_"   + names[i] + "_" + cuts[j] + ";M_{#gamma#gamma};Events").c_str(), 20, 100, 140);
+         m_diphoton_mass  [i][j]  =  fs->make<TH1F>(("diphoton_mass"   + names[i] + "_" + cuts[j] ).c_str(), ("diphoton_mass_"   + names[i] + "_" + cuts[j] + ";M_{#gamma#gamma};Events/GeV").c_str(), 50, 100, 150);
 
 
 
@@ -261,8 +262,6 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
          num_good++;
       }
    }
-   std::cout << "vertex:" << num << std::endl;
-
    m_n_vertices->Fill(num);
    m_n_vertices_good->Fill(num_good);
 
@@ -297,6 +296,7 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
            //std::cout << "Found Higgs with 2(3?) daughters\n";
            photon0 = dynamic_cast<const reco::GenParticle *>(genParticle->daughter(0));
            photon1 = dynamic_cast<const reco::GenParticle *>(genParticle->daughter(1));
+           m_event_info.vertex = genParticle->vertex();
 
            if( photon0->pdgId() != 22 || photon0->pdgId() != 22 || photon0->status() != 1 || photon1->status() != 1) // Not Higgs to gg
            {
@@ -441,11 +441,13 @@ float HiggsAnalyzer::get_mass()
             return 0.0f;
          }
 
+         math::XYZPoint cluster_pos(pToCluster->position());
+         cluster_pos.SetZ( cluster_pos.Z() - m_event_info.vertex.Z());
          float en = pToCluster->seed()->energy();
          if (m_linCorr) en /= m_linCorr;
 
-         float pt = en/cosh(pToCluster->eta());
-         m_event_info.p[i] = math::PtEtaPhiMLorentzVector(pt, pToCluster->eta(), pToCluster->phi(), 0.0f);
+         float pt = en/cosh(cluster_pos.eta());
+         m_event_info.p[i] = math::PtEtaPhiMLorentzVector(pt, cluster_pos.eta(), cluster_pos.phi(), 0.0f);
          m_event_info.r9[i] =  pToCluster->seed()->energy() / pToCluster->energy();
 
       }
@@ -461,8 +463,11 @@ float HiggsAnalyzer::get_mass()
             m_n_unmatched++;
             return 0.0f;
          }
+         math::XYZPoint photon_pos(pToPhoton->caloPosition());
+         photon_pos.SetZ(photon_pos.Z() - m_event_info.vertex.Z());
+
+         m_event_info.p[i] = math::PtEtaPhiMLorentzVector( pToPhoton->energy() / cosh( photon_pos.eta() ), photon_pos.eta(), photon_pos.phi(), 0.0f);
          m_event_info.r9[i] =  1.0f;
-         m_event_info.p[i] = pToPhoton->p4();
       }
 
    }
