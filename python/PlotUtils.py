@@ -16,6 +16,7 @@ def customROOTstyle() :
     ROOT.gStyle.SetLabelOffset(0.007, "XYZ");
     ROOT.gStyle.SetLabelSize(0.05, "XYZ");
     ROOT.gStyle.SetTitleSize(0.05, "XYZ");
+    ROOT.gStyle.SetTitleOffset(2, "XYZ");
     ROOT.gStyle.SetAxisColor(1, "XYZ");
     ROOT.gStyle.SetStripDecimals(True);
     ROOT.gStyle.SetTickLength(0.03, "XYZ");
@@ -24,8 +25,8 @@ def customROOTstyle() :
     ROOT.gStyle.SetPadTickY(0);
     ROOT.gStyle.SetMarkerStyle(20);
     ROOT.gStyle.SetHistLineColor(1);
-    ROOT.gStyle.SetHistLineStyle(0);
-    ROOT.gStyle.SetHistLineWidth(1);
+    ROOT.gStyle.SetHistLineStyle(1);
+    ROOT.gStyle.SetHistLineWidth(3);
     ROOT.gStyle.SetFrameBorderMode(0);
     ROOT.gStyle.SetFrameBorderSize(1);
     ROOT.gStyle.SetFrameFillColor(0);
@@ -53,13 +54,17 @@ def drawHist(hist,name,width=500,height=500):
     hist.Draw()
     c.SaveAs(name)
 
-def drawMultiple(hists,labels,filename,colors=[], width = 500, height = 500):
+def drawMultiple(hists,labels,filename,colors=[], width = 500, height = 500, norm = False, xtitle = "", ytitle = "", rebin = 0):
     customROOTstyle()
     hist_max = 0
     if not colors:
         colors = [ROOT.kRed, ROOT.kBlue, ROOT.kBlack]
         colors = colors[:len(hists)]
     for h in hists:
+        if rebin:
+           h.Rebin(rebin)
+        if norm:
+           h.Scale(1./h.Integral())
         if h.GetMaximum() > hist_max:
             hist_max = h.GetMaximum()
 
@@ -78,15 +83,19 @@ def drawMultiple(hists,labels,filename,colors=[], width = 500, height = 500):
         h.SetMaximum(1.2 * hist_max)
         h.SetTitle(l)
         h.SetLineColor(c)
-        #h.SetLineWidth(2)
+        h.SetLineWidth(3)
+        h.GetYaxis().SetTitleOffset(1.5)
         #h.SetOptStat(0)
         if first:
+            if xtitle: h.GetXaxis().SetTitle(xtitle)
+            if ytitle: h.GetYaxis().SetTitle(ytitle)
             h.Draw()
             first = False
         else:
             h.Draw("same")
 
         leg.AddEntry(h,l)
+
 
     leg.Draw()
     canv.SaveAs(filename)
