@@ -21,7 +21,7 @@ process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 from UserCode.HGCanalysis.storeTools_cff import fillFromStore
 
-files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/hToGammaGammaPU_SLHC21/') ]
+files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/hToGammaGamma_SLHC21_p1/') ]
 
 process.source = cms.Source("PoolSource",
         fileNames = cms.untracked.vstring(files),
@@ -40,7 +40,7 @@ process.filter = cms.EDFilter("MCBarrelEndcapFilter",
        verbose = cms.untracked.bool(True),
         )
 
-process.TFileService = cms.Service("TFileService", fileName = cms.string('Higgs-analysis.root'))
+process.TFileService = cms.Service("TFileService", fileName = cms.string('Higgs-analysis-noPU.root'))
 
 
 #process.p = cms.Path(process.filter * process.analysis)

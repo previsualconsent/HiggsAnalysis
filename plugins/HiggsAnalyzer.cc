@@ -164,17 +164,17 @@ HiggsAnalyzer::HiggsAnalyzer(const edm::ParameterSet& iConfig)
 
     edm::Service<TFileService> fs;
 
-    m_gen_event_type         =  fs->make<TH1F>("gen_event_type",         ";Event type;Events",       4,           0,    4);
+    m_gen_event_type         =  fs->make<TH1F>("gen_event_type",         ";Event type;Events",       5,           0,    5);
     m_n_vertices = fs->make<TH1F>("n_vert", ";vertices;Events",180,0,180);
     m_n_vertices_good = fs->make<TH1F>("n_vert_good", ";vertices;Events",180,0,180);
 
-    std::string names[5] = { "All", "!E|B", "B+B", "E+E", "E+B"};
+    std::string names[6] = { "All", "!E|B", "B+B", "E+E", "E+B", "E-E"};
     std::string cuts[4] = { "None","reco", "pt", "r9"};
 
-    for ( int i = 1; i < 5; ++i)
+    for ( int i = 1; i < 6; ++i)
        m_gen_event_type->GetXaxis()->SetBinLabel(i,names[i].c_str());
 
-    for ( int i = 0; i < 5; ++i)
+    for ( int i = 0; i < 6; ++i)
        for (int j = 0; j < 4; j++)
        {
           m_gen_photon_pt1 [i][j]  =  fs->make<TH1F>(("gen_photon_pt1"  + names[i] + "_" + cuts[j]).c_str(), ("gen_photon_pt1"  + names[i] + "_" + cuts[j] + ";p_{T1};Photons").c_str()         , 20, 0,   125);
@@ -186,7 +186,7 @@ HiggsAnalyzer::HiggsAnalyzer(const edm::ParameterSet& iConfig)
 
        }
 
-    for ( int i = 0; i < 5; ++i)
+    for ( int i = 0; i < 6; ++i)
       for (int j = 0; j < 4; j++)
          m_diphoton_mass  [i][j]  =  fs->make<TH1F>(("diphoton_mass"   + names[i] + "_" + cuts[j] ).c_str(), ("diphoton_mass_"   + names[i] + "_" + cuts[j] + ";M_{#gamma#gamma};Events/GeV").c_str(), 50, 100, 150);
 
@@ -328,7 +328,10 @@ HiggsAnalyzer::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
       if(type1 == BARREL_PHOTON)
          eventType = 4; // B+E
       else if(type1 == ENDCAP_PHOTON)
-         eventType = 3; // E+E
+         if( photon0->eta() * photon1->eta() > 0)
+            eventType = 3; // E+E
+         else
+            eventType = 5; // E-E
       else
          eventType = 1; //!B|E
    else
