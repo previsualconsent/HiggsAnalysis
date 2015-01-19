@@ -24,7 +24,7 @@ from UserCode.HGCanalysis.storeTools_cff import fillFromStore
 files =  [f for f in fillFromStore('/afs/cern.ch/work/p/phansen/public/hgcal/CMSSW/hToGammaGamma_SLHC21_p1/') ]
 
 process.source = cms.Source("PoolSource",
-        fileNames = cms.untracked.vstring(files),
+        fileNames = cms.untracked.vstring(files)
         )
 process.source.duplicateCheckMode = cms.untracked.string('noDuplicateCheck')
 
